@@ -1,0 +1,39 @@
+# 多階段構建 - 構建階段
+FROM node:18-alpine AS builder
+
+# 設置工作目錄
+WORKDIR /app
+
+# 複製 package.json
+COPY package.json ./
+
+# 安裝所有依賴 (包括開發依賴)
+RUN npm install
+
+# 複製源代碼
+COPY . .
+
+# 構建應用
+RUN npm run build
+
+# 生產階段
+FROM node:18-alpine AS production
+
+# 安裝 serve 來提供靜態文件
+RUN npm install -g serve
+
+# 設置工作目錄
+WORKDIR /app
+
+# 從構建階段複製構建結果
+COPY --from=builder /app/build ./build
+
+# 暴露端口
+EXPOSE 3000
+
+# 健康檢查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+
+# 啟動命令
+CMD ["serve", "-s", "build", "-l", "3000"]

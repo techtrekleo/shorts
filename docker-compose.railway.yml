@@ -4,7 +4,7 @@ services:
   shorts-app:
     build:
       context: .
-      dockerfile: Dockerfile.optimized
+      dockerfile: Dockerfile.railway
     ports:
       - "3000:3000"
     environment:
